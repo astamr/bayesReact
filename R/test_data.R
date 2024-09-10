@@ -1,0 +1,17 @@
+#' Subset of liver cancer data from the Human Cancer Genome Atlas
+#'
+#' The test data contains fold-change ranked genes from the Human Cancer Genome Atlas (TCGA; n = 20), and matching motif counts and probabilities from the 3' UTR sequences.
+#' The data is generated from publicly available mRNA expression data and nucleotide sequences from 3' Untranslated regions (UTRs) extracted from hg38 based on the GENCODE v32 annotations.
+#' The aim of the test data is to become familiar with the core bayesReact functions and structure of the input data.
+#'
+#' @format ## `test_data`
+#' List data containing three matrices needed to run bayesReact_core():
+#' \describe{
+#'   \item{FC_rank}{Contains fold-change based sequence ranks from 20 liver cancer patients. Rownames matches original mRNA expression matrix. and matching miR-122 expression (known to be present in liver tissue), as well as fold-change based sequence ranks.}
+#'   \item{motif_probs}{Contains sequence-specific motif probabilities for each 3' UTR sequence (from protein-coding genes). The matrix contains information on two motifs; the miR-122-5p target site ("ACACTCC") and the non-functional reverse-complementary motif ("GGAGTGT").}
+#'   \item{motif_counts}{Contains motif counts for all 3' UTR sequences and the dimensions matches 'motif_probs'.}
+#' }
+#' @source <https://portal.gdc.cancer.gov/>
+#' @docType data
+#' @name test_data
+"test_data"
