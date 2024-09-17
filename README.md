@@ -134,7 +134,7 @@ To summarize:
 A detailed description of the underlying model developed for and used in
 bayesReact, can be found here:
 
-Rasmussen, A. M., Bouchard-Côt&#233, A., & Pedersen, J. S. (2024).
+Rasmussen, A. M., Bouchard-Côté, A., & Pedersen, J. S. (2024).
 bayesReact: Expression-coupled regulatory motif analysis detects
 microRNA activity in cancer and at the single cell level. *bioRxiv*,
 2024-09. Preprint, doi: <https://doi.org/10.1101/2024.09.10.612047>.
