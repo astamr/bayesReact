@@ -54,11 +54,21 @@ construct_motif_model <- function(model = "bayesReact"){
   vector[C] sum_log_1_minus_r;    // precomputed sum log 1-r for each sample
   }
   parameters {
-    vector[C] a;                  // core shape parameter for each sample
+    real<lower=0> tau;
+    vector<lower=0>[C] lambda;
+    vector[C] z;
+  }
+  transformed parameters {
+  vector[C] a;                    // core shape parameter for each sample
+  real<lower=0> cnst = 0.1;       // Regularization parameter/constant
+
+  a = z .* (tau * lambda) ./ sqrt(1 + square(tau * lambda / cnst));
   }
   model {
     //priors
-    a ~ normal(0, 10);
+    tau ~ cauchy(0, 2.5);        // Global shrinkage parameter
+    lambda ~ cauchy(0, 2.5);     // Local shrinkage parameter
+    z ~ normal(0, 1);            // Unscaled activity parameter (?)
 
     //likelihood - n|t ~ multinomial
     for (c in 1:C) {
