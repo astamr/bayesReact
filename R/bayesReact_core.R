@@ -105,7 +105,7 @@ bayesReact_core <- function(lst_data, threshold_motif_prob = 1e-10, threshold_mo
     return(m_out)
   }
 
-  if (is.vector(motif_probs) & !parallel | isFALSE(tryCatch(ncol(motif_probs) == 1)) & !parallel){ # When only one motif is provided; Enables returning full posterior or model object.
+  if (is.vector(motif_probs) & !parallel | isTRUE(tryCatch(ncol(motif_probs) == 1)) & !parallel){ # When only one motif is provided; Enables returning full posterior or model object.
     if (model == "BF" & requireNamespace("bridgesampling", quietly = TRUE) == F) stop("The bridgesampling package is required for model = \"BF\". Please install bridgesampling and try again.", call. = F)
     if(!is.vector(motif_probs)){
       motif_probs <- motif_probs[,1]
