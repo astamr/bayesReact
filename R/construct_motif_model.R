@@ -44,6 +44,34 @@ construct_motif_model <- function(model = "bayesReact"){
   }
   '
 
+  # Core one-parameter model for motif activity inference with shrinkage prior (horseshoe)
+  bayesReact_shrinkage <- 'data { // shrinkage prior model
+  int<lower=1> K;                 // number of motif observations
+  int<lower=1> C;                 // number of samples or cells
+
+  vector[C] sum_log_l;            // precomputed sum log l for each sample, relevant when adding M plate
+  vector[C] sum_log_r;            // precomputed sum log r for each sample
+  vector[C] sum_log_1_minus_r;    // precomputed sum log 1-r for each sample
+  }
+  parameters {
+    vector[C] a;                  // core shape parameter for each sample
+  }
+  model {
+    //priors
+    a ~ normal(0, 10);
+
+    //likelihood - n|t ~ multinomial
+    for (c in 1:C) {
+      if (a[c] < 0) {
+        target += sum_log_l[c] + (-a[c])*sum_log_1_minus_r[c] - K*lbeta(1, 1-a[c]);
+      }
+      else {
+        target += sum_log_l[c] + a[c]*sum_log_r[c] - K*lbeta(1+a[c], 1);
+      };
+    }
+  }
+  '
+
   # BF: model comparison between beta model and uniform null model
   BF <- 'data {                 // fits model for single sample at a time (C = 1)
   int<lower=1> K;               // number of motif observations
@@ -105,7 +133,8 @@ construct_motif_model <- function(model = "bayesReact"){
   # ...
 
   # list of models
-  model_codes <- list(bayesReact = bayesReact, BF = BF, bayesReact_2param = bayesReact_2param)
+  model_codes <- list(bayesReact = bayesReact, BF = BF,
+                      bayesReact_2param = bayesReact_2param, bayesReact_shrinkage = bayesReact_shrinkage)
 
   # Construct and return STAN model
   return(rstan::stan_model(model_code = model_codes[[model]]))

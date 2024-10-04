@@ -55,7 +55,7 @@ bayesReact_parallel <- function(lst_data, out_path, out_name = "motif_activity",
   cat("\n", file = logs_con, append = T)
 
   ## Checks ##
-  if (!(model %in% c("bayesReact", "BF", "bayesReact_2param"))) {
+  if (!(model %in% c("bayesReact", "BF", "bayesReact_2param", "bayesReact_shrinkage"))) {
     cat("Error: \'model\' must be either \"bayesReact\" or \"BF\"\n", file = logs_con, append = T)
     stop("model must be either \"bayesReact\" or \"BF\"", call. = F)
   }

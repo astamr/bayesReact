@@ -50,7 +50,7 @@ bayesReact_core <- function(lst_data, threshold_motif_prob = 1e-10, threshold_mo
   # check correct input type
   if (!is.list(lst_data)) stop("lst_data must be a list containing file paths (or data frames) in the format provided by bayesReact::process_raw_input():
                                  list(FC_rank = \"./FC_rank_date.rds\", motif_probs = \"./seqXmot_probs.rds\", motif_counts = \"./seqXmot_counts.rds\")", call. = F)
-  if (!(model %in% c("bayesReact", "BF", "bayesReact_2param"))) stop("model must be either \"bayesReact\" or \"BF\"", call. = F)
+  if (!(model %in% c("bayesReact", "BF", "bayesReact_2param", "bayesReact_shrinkage"))) stop("model must be either \"bayesReact\" or \"BF\"", call. = F)
 
   ## Read in relevant data ##
   if (is.character(lst_data$FC_rank)) {FC_rank <- readRDS(lst_data$FC_rank)} else {FC_rank <- lst_data$FC_rank}
