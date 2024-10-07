@@ -45,7 +45,7 @@ construct_motif_model <- function(model = "bayesReact"){
   '
 
   # Core one-parameter model for motif activity inference with shrinkage prior (horseshoe)
-  bayesReact_shrinkage <- 'data { // shrinkage prior model
+  bayesReact_shrinkage <-  'data {           // default model    ### CONSIDER ADDING M PLATE ###
   int<lower=1> K;                 // number of motif observations
   int<lower=1> C;                 // number of samples or cells
 
@@ -54,19 +54,11 @@ construct_motif_model <- function(model = "bayesReact"){
   vector[C] sum_log_1_minus_r;    // precomputed sum log 1-r for each sample
   }
   parameters {
-    vector<lower=0>[C] lambda;
-    vector[C] z;
-  }
-  transformed parameters {
-  vector[C] a;                    // core shape parameter for each sample
-  real<lower=0> cnst = 0.1;       // Regularization parameter/constant
-
-  a = z .* (lambda) ./ sqrt(1 + square(lambda / cnst));
+    vector[C] a;                  // core shape parameter for each sample
   }
   model {
     //priors
-    lambda ~ cauchy(0, 2.5);     // Local shrinkage parameter
-    z ~ normal(0, 1);            // Unscaled activity parameter (?)
+    a ~ student_t(3, 0, 1);
 
     //likelihood - n|t ~ multinomial
     for (c in 1:C) {
