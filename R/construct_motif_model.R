@@ -58,7 +58,7 @@ construct_motif_model <- function(model = "bayesReact"){
   }
   model {
     //priors
-    a ~ student_t(3, 0, 1);
+    a ~ normal(0, 1);
 
     //likelihood - n|t ~ multinomial
     for (c in 1:C) {
