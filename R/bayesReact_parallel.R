@@ -22,6 +22,8 @@
 #' @param MCMC_warmup initial iterations to be discarded for each chain as warm-up/burn-in.
 #' @param MCMC_cores number of cores, default is equal to the number of chains (which is the maximum number of cores that can be utilized by STAN's MCMC sampler).
 #' @param MCMC_keep_warmup whether to keep the warm-up iterations or not.
+#' @param posterior_approx algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but less accurate approximation).
+#' Only works with model = "bayesReact" and output_type = "activity".
 #'
 #' @return The function returns the path to the output file, which is saved in the 'out_path' and named 'out_name'. If output_type = "activity", the output contains a matrix of dimension motifs X cells/samples with motif activities.
 #' If output_type = "activity_summary", the output contains a list with the motif X cell/sample matrices: "motif_activity" (the motif activity estimates), "motif_post_prob" (the posterior probability of log P(|a| <= 0 | data) + log(2)),
@@ -42,7 +44,8 @@
 bayesReact_parallel <- function(lst_data, out_path, out_name = "motif_activity", save_as_bigmat = F, account, samples_per_partition = 20,
                                 threshold_motif_prob = 1e-10, threshold_motif_count = 2,
                                 model = "bayesReact", output_type = "activity_summary", CI = c(0.10, 0.90), #CI = c(0.005, 0.995),
-                                MCMC_iterations = 3000, MCMC_chains = 3, MCMC_warmup = 500, MCMC_cores = MCMC_chains, MCMC_keep_warmup = F){
+                                MCMC_iterations = 3000, MCMC_chains = 3, MCMC_warmup = 500,
+                                MCMC_cores = MCMC_chains, MCMC_keep_warmup = F, posterior_approx = "MCMC"){
 
   logs_file <- paste0(out_path, "logs_", out_name, ".txt")
   logs_con <- logs_file #file(logs_file, open = "a")
@@ -55,9 +58,17 @@ bayesReact_parallel <- function(lst_data, out_path, out_name = "motif_activity",
   cat("\n", file = logs_con, append = T)
 
   ## Checks ##
-  if (!(model %in% c("bayesReact", "BF", "bayesReact_2param", "bayesReact_shrinkage"))) {
+  if (!(model %in% c("bayesReact", "BF", "bayesReact_2param"))) {
     cat("Error: \'model\' must be either \"bayesReact\" or \"BF\"\n", file = logs_con, append = T)
     stop("model must be either \"bayesReact\" or \"BF\"", call. = F)
+  }
+  if (!(posterior_approx %in% c("MCMC", "Laplace"))) {
+    cat("Error: \'posterior_approx\' must be either \"MCMC\" or \"Laplace\"\n", file = logs_con, append = T)
+    stop("posterior_approx must be either \"MCMC\" or \"Laplace\"", call. = F)
+  }
+  if (posterior_approx == "Laplace" & model != "bayesReact" & output_type != "activity") {
+    cat("Error: Laplace approximation only works with the \"bayesReact\" model specification and \"activity\" output\n", file = logs_con, append = T)
+    stop("Laplace approximation only works with the \"bayesReact\" model specification and \"activity\" output", call. = F)
   }
   if (model == "BF" & requireNamespace("bridgesampling", quietly = TRUE) == F) {
     cat("Error: The bridgesampling package is required for model = \"BF\". Please install bridgesampling and try again.\n", file = logs_con, append = T)
@@ -209,7 +220,7 @@ bayesReact_parallel <- function(lst_data, out_path, out_name = "motif_activity",
     waste <- system("sbatch sbatch.script", ignore.stdout = T, ignore.stderr = T)
   }
 
-  ## Monitoring job progress ## # !!!!!!!!!!!!!!!!!!!!!! CONSIDER MAKING A PROGRESS BAR UPDATING LAST LINE IN FILE !!!!!
+  ## Monitoring job progress ##
   # Start small tracking job
   cat("Initiating tracking of partition jobs.", "\n\n", sep="", file = logs_con, append = T)
   #close(logs_con)

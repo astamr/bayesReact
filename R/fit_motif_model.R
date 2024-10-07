@@ -14,6 +14,7 @@
 #' @param warmup initial iterations to be discarded for each chain as warm-up/burn-in.
 #' @param cores number of cores, default is equal to the number of chains (which is the maximum number of cores that can be utilized by STAN's MCMC sampler). Alternatively, consider parallel::detectCores().
 #' @param keep_warmup whether to keep the warm-up iterations or not.
+#' @param posterior_approx algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but less accurate approximation).
 #'
 #' @return Activity estimates in a format specified by output_type.
 #' @export
@@ -25,10 +26,52 @@
 #' }
 #'
 fit_motif_model <- function(input, model, model_type = "bayesReact", output_type = "activity_summary", CI = c(0.10, 0.90), #99% CI = c(0.005, 0.995),
-                            iterations = 3000, chains = 3, warmup = 500, cores = chains, keep_warmup = F){
-  # Try solving Segfault issue
-  #try(reg.finalizer(m), silent = T)
-  #if (model_type == "BF"){invisible(gc(reset = TRUE, full = TRUE))}
+                            iterations = 3000, chains = 3, warmup = 500, cores = chains, keep_warmup = F, posterior_approx = "MCMC"){
+
+  if (posterior_approx == "Laplace"){
+    m <- rstan::optimizing(model,
+                           data = input,
+                           hessian = TRUE)
+
+    times <- 1
+    while (is.null(m)) {
+      if (times > 10) {
+        stop("Laplace approx. failed 10 times. Consider using MCMC sampling instead.")
+      }
+      print("Laplace approx. failed. Trying again.")
+      invisible(gc(reset = TRUE, full = TRUE))
+      Sys.sleep(1)
+      m <- rstan::optimizing(model,
+                             data = input,
+                             hessian = TRUE)
+      times <- times + 1
+    }
+
+    # Construct covariance matrix
+    hessian_matrix <- m$hessian
+    cov_matrix <- solve(-hessian_matrix)
+    cat("Succesfull model fit. \n")
+
+    ## Return model fit ##
+    m_fit_stats <- data.frame(mean = m$par, sd = sqrt(diag(cov_matrix)))
+    m_fit_stats$post_prob <- -(stats::pnorm(0, mean = abs(m_fit_stats$mean), sd = m_fit_stats$sd, log.p = T) + log(2))
+    m_fit_stats$activity <- m_fit_stats$post_prob*sign(m_fit_stats$mean)
+
+    if (output_type == "activity"){
+      return(m_fit_stats$activity)
+
+    } else if (output_type == "full_model") { # Only for single motif
+      return(m) # returns list object
+
+    } else {
+      stop("Invalid output_type argument. Please choose from 'activity', or 'full_model' when performing Laplace approx.")
+    }
+
+
+#________________________________________________________________________________________________________________________
+
+
+  } else { # HMC sampling
 
   ## Load data if file_path is provided ##
   if (is.character(input)) {
@@ -115,7 +158,7 @@ fit_motif_model <- function(input, model, model_type = "bayesReact", output_type
     stop("Invalid output_type argument. Please choose from 'activity', 'activity_summary', 'full_posterior', or 'full_model'.")
   }
 }
-
+}
 
 
 

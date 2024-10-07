@@ -18,6 +18,8 @@
 #' @param MCMC_cores number of cores, default is equal to the number of chains (which is the maximum number of cores that can be utilized by STAN's MCMC sampler).
 #' Alternatively consider parallel::detectCores().
 #' @param MCMC_keep_warmup whether to keep the warm-up iterations or not.
+#' @param posterior_approx algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but less accurate approximation).
+#' Only works with model = "bayesReact" and output_type = "activity" or "full_model".
 #' @param parallel this parameter should never be changed manually and is used internally by bayesReact_parallel().
 #'
 #' @return Motif activity estimates in a format specified by output_type.
@@ -31,8 +33,8 @@
 #'
 bayesReact_core <- function(lst_data, threshold_motif_prob = 1e-10, threshold_motif_count = 2, #!!!!! Consider being able to specify sampler (e.g. MCMC/HMC, vb, pigeons) !!!!!
                             model = "bayesReact", output_type = "activity_summary", CI = c(0.10, 0.90), #CI = c(0.005, 0.995),
-                            MCMC_iterations = 3000, MCMC_chains = 3, MCMC_warmup = 500, MCMC_cores = MCMC_chains,
-                            MCMC_keep_warmup = F, parallel = F) {
+                            MCMC_iterations = 3000, MCMC_chains = 3, MCMC_warmup = 500,
+                            MCMC_cores = MCMC_chains, MCMC_keep_warmup = F, posterior_approx = "MCMC", parallel = F) {
   # start logo
   if(!parallel){
     cat("\n")
@@ -42,15 +44,25 @@ bayesReact_core <- function(lst_data, threshold_motif_prob = 1e-10, threshold_mo
     cat("\n")
     cat("________________________________________________________\n________________________________________________________\n")
     cat("\n")
+
+    # check correct input type
+    if (!is.list(lst_data)) stop("lst_data must be a list containing file paths (or data frames) in the format provided by bayesReact::process_raw_input():
+                                 list(FC_rank = \"./FC_rank_date.rds\", motif_probs = \"./seqXmot_probs.rds\", motif_counts = \"./seqXmot_counts.rds\")", call. = F)
+    if (!(model %in% c("bayesReact", "BF", "bayesReact_2param"))) stop("model must be either \"bayesReact\" or \"BF\"", call. = F)
+
+    if (!(posterior_approx %in% c("MCMC", "Laplace"))) {
+      cat("Error: \'posterior_approx\' must be either \"MCMC\" or \"Laplace\"\n", file = logs_con, append = T)
+      stop("posterior_approx must be either \"MCMC\" or \"Laplace\"", call. = F)
+    }
+    if (posterior_approx == "Laplace" & model != "bayesReact" & !(output_type %in% c("activity", "full_model"))) {
+      cat("Error: Laplace approximation only works with the \"bayesReact\" model specification and \"activity\" or \"full_model\" output\n", file = logs_con, append = T)
+      stop("Laplace approximation only works with the \"bayesReact\" model specification and \"activity\" or \"full_model\" output", call. = F)
+    }
+
   } else{
     nr_motif_part <- lst_data$nr_motif_part # in parallel, track number of motif partitions
     motif_names <- lst_data$motif_names # iterate over motif names
     partition <- 1} # track current motif partition
-
-  # check correct input type
-  if (!is.list(lst_data)) stop("lst_data must be a list containing file paths (or data frames) in the format provided by bayesReact::process_raw_input():
-                                 list(FC_rank = \"./FC_rank_date.rds\", motif_probs = \"./seqXmot_probs.rds\", motif_counts = \"./seqXmot_counts.rds\")", call. = F)
-  if (!(model %in% c("bayesReact", "BF", "bayesReact_2param", "bayesReact_shrinkage"))) stop("model must be either \"bayesReact\" or \"BF\"", call. = F)
 
   ## Read in relevant data ##
   if (is.character(lst_data$FC_rank)) {FC_rank <- readRDS(lst_data$FC_rank)} else {FC_rank <- lst_data$FC_rank}
@@ -93,7 +105,7 @@ bayesReact_core <- function(lst_data, threshold_motif_prob = 1e-10, threshold_mo
     # fit model for motif m
     m_out <- bayesReact::fit_motif_model(input = inlist, model = model_stan, output_type = output_type, CI = CI,
                                 iterations = MCMC_iterations, chains = MCMC_chains, warmup = MCMC_warmup, cores = MCMC_cores,
-                                keep_warmup = MCMC_keep_warmup)
+                                keep_warmup = MCMC_keep_warmup, posterior_approx = posterior_approx)
 
     # if running bayesReact_parallel(), check if next motif partition needs to be loaded
     try(if(parallel & partition < nr_motif_part & motif == colnames(motif_probs)[ncol(motif_probs)]){
@@ -135,6 +147,7 @@ bayesReact_core <- function(lst_data, threshold_motif_prob = 1e-10, threshold_mo
   if (!parallel){
     ## Match motif_probs and motif_counts to FC_rank ##
     if (model == "BF" & requireNamespace("bridgesampling", quietly = TRUE) == F) stop("The bridgesampling package is required for model = \"BF\". Please install bridgesampling and try again.", call. = F)
+    #
     # check if rows contain motifs instead of genes
     if (is.null(rownames(motif_probs))) {
       cat("\nWarning: No rownames are provided. Row numbers are used instead. \n")

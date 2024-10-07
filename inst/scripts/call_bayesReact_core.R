@@ -33,7 +33,7 @@ motif_act <- bayesReact::bayesReact_core(lst_data = list(FC_rank = FC_rank, moti
                                          threshold_motif_prob = input_parameters$threshold_motif_prob, threshold_motif_count = input_parameters$threshold_motif_count,
                                          model = input_parameters$model, parallel = T, output_type = input_parameters$output_type, CI = input_parameters$CI,
                                          MCMC_iterations = input_parameters$MCMC_iterations, MCMC_chains = input_parameters$MCMC_chains, MCMC_warmup = input_parameters$MCMC_warmup,
-                                         MCMC_cores = input_parameters$MCMC_cores, MCMC_keep_warmup = input_parameters$MCMC_keep_warmup)
+                                         MCMC_cores = input_parameters$MCMC_cores, MCMC_keep_warmup = input_parameters$MCMC_keep_warmup, posterior_approx = input_parameters$posterior_approx)
 
 ## Save partition output ##
 cat("Saving results", sub("FC_", "res_", file_path), format(Sys.time()), " \n")
