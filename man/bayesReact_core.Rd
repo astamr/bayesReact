@@ -16,6 +16,7 @@ bayesReact_core(
   MCMC_warmup = 500,
   MCMC_cores = MCMC_chains,
   MCMC_keep_warmup = F,
+  posterior_approx = "MCMC",
   parallel = F
 )
 }
@@ -44,6 +45,9 @@ Either "bayesReact" (default) or "BF" (Bayes Factor; when comparing beta model a
 Alternatively consider parallel::detectCores().}
 
 \item{MCMC_keep_warmup}{whether to keep the warm-up iterations or not.}
+
+\item{posterior_approx}{algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but less accurate approximation).
+Only works with model = "bayesReact" and output_type = "activity" or "full_model".}
 
 \item{parallel}{this parameter should never be changed manually and is used internally by bayesReact_parallel().}
 }

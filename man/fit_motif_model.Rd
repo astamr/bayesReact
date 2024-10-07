@@ -14,7 +14,8 @@ fit_motif_model(
   chains = 3,
   warmup = 500,
   cores = chains,
-  keep_warmup = F
+  keep_warmup = F,
+  posterior_approx = "MCMC"
 )
 }
 \arguments{
@@ -39,6 +40,8 @@ Either "bayesReact" (default) or "BF" (Bayes Factor; when comparing beta model a
 \item{cores}{number of cores, default is equal to the number of chains (which is the maximum number of cores that can be utilized by STAN's MCMC sampler). Alternatively, consider parallel::detectCores().}
 
 \item{keep_warmup}{whether to keep the warm-up iterations or not.}
+
+\item{posterior_approx}{algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but less accurate approximation).}
 }
 \value{
 Activity estimates in a format specified by output_type.
