@@ -18,7 +18,7 @@
 #' @param MCMC_cores number of cores, default is equal to the number of chains (which is the maximum number of cores that can be utilized by STAN's MCMC sampler).
 #' Alternatively consider parallel::detectCores().
 #' @param MCMC_keep_warmup whether to keep the warm-up iterations or not.
-#' @param posterior_approx algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but less accurate approximation).
+#' @param posterior_approx algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but slightly less accurate approximation).
 #' Only works with model = "bayesReact" and output_type = "activity" or "full_model".
 #' @param parallel this parameter should never be changed manually and is used internally by bayesReact_parallel().
 #'

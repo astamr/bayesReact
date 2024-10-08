@@ -14,7 +14,7 @@
 #' @param warmup initial iterations to be discarded for each chain as warm-up/burn-in.
 #' @param cores number of cores, default is equal to the number of chains (which is the maximum number of cores that can be utilized by STAN's MCMC sampler). Alternatively, consider parallel::detectCores().
 #' @param keep_warmup whether to keep the warm-up iterations or not.
-#' @param posterior_approx algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but less accurate approximation).
+#' @param posterior_approx algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but slightly less accurate approximation).
 #'
 #' @return Activity estimates in a format specified by output_type.
 #' @export

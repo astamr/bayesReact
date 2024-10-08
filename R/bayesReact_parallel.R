@@ -22,7 +22,7 @@
 #' @param MCMC_warmup initial iterations to be discarded for each chain as warm-up/burn-in.
 #' @param MCMC_cores number of cores, default is equal to the number of chains (which is the maximum number of cores that can be utilized by STAN's MCMC sampler).
 #' @param MCMC_keep_warmup whether to keep the warm-up iterations or not.
-#' @param posterior_approx algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but less accurate approximation).
+#' @param posterior_approx algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but slightly less accurate approximation).
 #' Only works with model = "bayesReact" and output_type = "activity".
 #'
 #' @return The function returns the path to the output file, which is saved in the 'out_path' and named 'out_name'. If output_type = "activity", the output contains a matrix of dimension motifs X cells/samples with motif activities.

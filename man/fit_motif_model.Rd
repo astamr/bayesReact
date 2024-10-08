@@ -41,7 +41,7 @@ Either "bayesReact" (default) or "BF" (Bayes Factor; when comparing beta model a
 
 \item{keep_warmup}{whether to keep the warm-up iterations or not.}
 
-\item{posterior_approx}{algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but less accurate approximation).}
+\item{posterior_approx}{algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but slightly less accurate approximation).}
 }
 \value{
 Activity estimates in a format specified by output_type.
