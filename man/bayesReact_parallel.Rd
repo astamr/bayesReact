@@ -63,8 +63,8 @@ Either "bayesReact" (default) or "BF" (Bayes Factor; to compare the performance 
 "Laplace" only works with model = "bayesReact" and output_type = "activity".}
 }
 \value{
-The function saves output file(s), named 'out_name', to the specified path 'out_path'. If output_type = "activity", the output contains a matrix of dimension motifs X cells/samples with motif activities.
-If output_type = "activity_summary", the output contains a list with the motif X cell/sample matrices: "motif_activity" (the motif activity estimates), "motif_post_prob" (the posterior probability of log P(|a| <= 0 | data) + log(2)),
+The function saves output file(s), named 'out_name', to the specified path 'out_path'. If output_type = "activity", the output contains a matrix of dimension cells/samples X motifs with motif activities.
+If output_type = "activity_summary", the output contains a list with the cell/sample X motif matrices: "motif_activity" (the motif activity estimates), "motif_post_prob" (the posterior probability of log P(|a| <= 0 | data) + log(2)),
 "motif_a_mean" (posterior mean of 'a'), "motif_a_sd" (posterior standard deviation of 'a'),
 "motif_a_CI_lower" (lower bound of credible interval (CI) for the underlying activity parameter 'a'), motif_a_CI_upper" (upper bound of CI),
 "motif_model_nEff" (effective sample sizes; autocorrelation diagnostic), and "motif_model_Rhat" (R-hat convergence diagnostic).

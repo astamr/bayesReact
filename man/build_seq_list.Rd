@@ -6,7 +6,6 @@
 \usage{
 build_seq_list(
   seq_in,
-  out_path = "./",
   gene_id = "gsym",
   min_length = 20,
   max_length = 10000,
@@ -15,8 +14,6 @@ build_seq_list(
 }
 \arguments{
 \item{seq_in}{character or dataframe, path to a bioMart output (decompressed .fasta file) or a dataframe containing gene_name/gene_IDs, sequences and sequence lengths.}
-
-\item{out_path}{character, path to save seqs and seqList objects as .rds files. Default is current working directory.}
 
 \item{gene_id}{character specifying the gene ID that should be used (this HAS to match the IDs in the gene/transcript expression matrix). The input can be "gsym" (gene symbol, default), "gid" (ensembl gene id), "tid" (ensembl transcript id). Only relevant to specify when using a bioMart file as input.}
 
@@ -27,14 +24,14 @@ build_seq_list(
 \item{one_seq_per_gene_id}{logical, if TRUE (default) only the longest sequence per gene will be included in the seqs object if a FASTA file is provided. Setting this parameter to FALSE is relevant when considering multiple transcripts per gene or when performing manual filtering of sequences.}
 }
 \value{
-Saves seqs and seqList objects as .rds files in the specified out_path.
+Returns list with seqs and seqList objects.
 }
 \description{
 Function using path to a fasta file or seqs dataframe to generate the seqs and seqList objects needed by Regmex to evaluate motif counts and sequence-specific probabilities, and saves the objects as independent .rds files. To obtain sequences from bioMart, please see the tutorial provided as part of the miReact package (https://github.com/muhligs/miReact/blob/master/makingUtrsForAdditionalSpecies.pdf).
 }
 \examples{
 \dontrun{
-build_seq_list(seq_in = "./mart_export.txt", out_path = "./path/", gene_id = "gsym")
+seq_out <- build_seq_list(seq_in = "./mart_export.txt", out_path = "./path/", gene_id = "gsym")
 }
 
 }
