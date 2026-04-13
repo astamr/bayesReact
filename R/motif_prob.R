@@ -36,9 +36,10 @@ motif_prob <- function(motifs, seqs, seqlist, paths = T, binom_approx = F, cores
     seqlist <- readRDS(seqlist)
   }
   # check if integer is specified to obtain all k-mers
-  if (is.integer(motifs)){
-    motifs_int <- motifs
-    motifs <- Regmex::all.mers(motifs)
+  motifs_int <- motifs
+  if (is.numeric(motifs) && length(motifs) == 1 && motifs == floor(motifs)) {
+    motifs_int <- as.integer(motifs_int)
+    motifs <- Regmex::all.mers(motifs_int)
   }
 
   ## Extract non-overlapping motif counts for each sequence ##
@@ -71,6 +72,7 @@ motif_prob <- function(motifs, seqs, seqlist, paths = T, binom_approx = F, cores
     # calculate probability of at least one motif occurrence in each sequence
     binom_prob <- function(motif, seq_freq, seq_len){
       mot_len <- nchar(motif)
+      if(seq_len < mot_len){return(0)} # handle motif longer than seq
       motif <- unlist(strsplit(motif, ""))
       trials <- seq_len - mot_len + 1 # number of trials is the number of positions where a motif can potentially occur in the sequence
       mot_occ_prob <- unlist(lapply(motif, function(x) seq_freq[x])) # probability of each nucleotide in the motif is its frequency in the sequence

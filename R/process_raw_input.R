@@ -38,6 +38,9 @@ process_raw_input <- function(exp, seq_data, motifs, out_path = "./",
   # initial checks
   if(substring(out_path, nchar(out_path)) != "/"){out_path <- paste0(out_path, "/")}
   if(is.data.frame(exp) + is.matrix(exp) + is.character(exp) == 0) stop("expression data input should be either a dataframe, matrix, or character string specifying an .rds input file" , call. = F)
+  # check seq_data type
+  is_seq_dat_vec <- is.character(seq_data) && length(seq_data) > 1
+  #is_seq_dat_other <- is.data.frame(seq_data) || (is.character(seq_data) && length(seq_data) == 1)
 
   ## Process expression data ##
   if (is.character(exp)){
@@ -53,8 +56,8 @@ process_raw_input <- function(exp, seq_data, motifs, out_path = "./",
 
   if (process_all){
     ## Process sequence data ##
-    if (!is.vector(seq_data)) {
-      seq_out <- bayesReact::build_seq_list(seq_data, out_path = out_path, gene_id = seq_gene_id, min_length = seq_min_length, max_length = seq_max_length)
+    if (!is_seq_dat_vec) {
+      seq_out <- bayesReact::build_seq_list(seq_data, gene_id = seq_gene_id, min_length = seq_min_length, max_length = seq_max_length)
       seqs <- seq_out$seqs
       seqlist <- seq_out$seqlist
 
@@ -71,7 +74,7 @@ process_raw_input <- function(exp, seq_data, motifs, out_path = "./",
     cat("Successfully processed sequence data. \n")
 
     ## Process motif data ##
-    if (is.vector(seq_data)){
+    if (is_seq_dat_vec){
       seqs <- readRDS(seq_data[1])
       seqlist <- readRDS(seq_data[2])
       seq_paths <- list(seqs_path = seq_data[1], seqlist_path = seq_data[2])
@@ -96,7 +99,7 @@ process_raw_input <- function(exp, seq_data, motifs, out_path = "./",
   }
 
   # generate fold-change (FC) based sequence ranks
-  if (process_all == F & is.vector(seq_data)){
+  if (process_all == F & is_seq_dat_vec){
     seqs <- readRDS(seq_data[1])
 
     # check overlap in sequences between expression and sequence data

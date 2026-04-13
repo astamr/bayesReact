@@ -28,6 +28,11 @@
 fit_motif_model <- function(input, model, model_type = "bayesReact", output_type = "activity_summary", CI = c(0.10, 0.90),
                             iterations = 3000, chains = 3, warmup = 500, cores = chains, keep_warmup = F, posterior_approx = "MCMC"){
 
+  ## Load data if file_path is provided ##
+  if (is.character(input)) {
+    input <- readRDS(input)
+  }
+
   ## Laplace approximation of posterior distribution ##
   if (posterior_approx == "Laplace"){
     a_init <- stats::rnorm(1, 0, 1) # avoid init at extreme values
@@ -75,11 +80,6 @@ fit_motif_model <- function(input, model, model_type = "bayesReact", output_type
 
 
   } else { # HMC sampling
-
-  ## Load data if file_path is provided ##
-  if (is.character(input)) {
-    input <- readRDS(input)
-  }
 
   ## Model fit (MCMC sampling) ##
   pars = c("a")

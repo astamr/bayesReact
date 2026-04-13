@@ -27,7 +27,7 @@ norm_scale_seq <- function(exp, data_type = "count", save_rds = T, path = "./") 
   # remove genes not expressed
   rm <- which(rowSums(exp) == 0)
   if (length(rm) != 0){
-    exp <- exp[-rm,]
+    exp <- exp[-rm,, drop = F]
   }
 
   # normalize and log2 transform

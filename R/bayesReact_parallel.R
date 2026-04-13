@@ -25,8 +25,8 @@
 #' @param posterior_approx algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but slightly less accurate uncertainties).
 #' "Laplace" only works with model = "bayesReact" and output_type = "activity".
 #'
-#' @return The function saves output file(s), named 'out_name', to the specified path 'out_path'. If output_type = "activity", the output contains a matrix of dimension motifs X cells/samples with motif activities.
-#' If output_type = "activity_summary", the output contains a list with the motif X cell/sample matrices: "motif_activity" (the motif activity estimates), "motif_post_prob" (the posterior probability of log P(|a| <= 0 | data) + log(2)),
+#' @return The function saves output file(s), named 'out_name', to the specified path 'out_path'. If output_type = "activity", the output contains a matrix of dimension cells/samples X motifs with motif activities.
+#' If output_type = "activity_summary", the output contains a list with the cell/sample X motif matrices: "motif_activity" (the motif activity estimates), "motif_post_prob" (the posterior probability of log P(|a| <= 0 | data) + log(2)),
 #' "motif_a_mean" (posterior mean of 'a'), "motif_a_sd" (posterior standard deviation of 'a'),
 #' "motif_a_CI_lower" (lower bound of credible interval (CI) for the underlying activity parameter 'a'), motif_a_CI_upper" (upper bound of CI),
 #' "motif_model_nEff" (effective sample sizes; autocorrelation diagnostic), and "motif_model_Rhat" (R-hat convergence diagnostic).
@@ -48,6 +48,7 @@ bayesReact_parallel <- function(lst_data, out_path, out_name = "motif_activity",
                                 MCMC_cores = MCMC_chains, MCMC_keep_warmup = F, posterior_approx = "MCMC"){
 
   if(substring(out_path, nchar(out_path)) != "/"){out_path <- paste0(out_path, "/")}
+  if (!dir.exists(out_path)) {dir.create(out_path, recursive = T)}
   logs_file <- paste0(out_path, "logs_", out_name, ".txt")
   logs_con <- logs_file
   cat("\n", file = logs_con)
@@ -86,11 +87,7 @@ bayesReact_parallel <- function(lst_data, out_path, out_name = "motif_activity",
     stop(input_error_message, call. = F)
   }
   cat("\n___________Loading and partitioning input data__________\n\n", file = logs_con, append = T)
-  if (!dir.exists(out_path)) {
-    dir.create(out_path, recursive = T)
-    cat(paste0("Created output directory: ", out_path, " \n"), file = logs_con, append = T)
-  }
-  if (substring(out_path, nchar(out_path)) != "/"){out_path <- paste0(out_path, "/")}
+  cat(paste0("Using output directory: ", out_path, " \n"), file = logs_con, append = T)
 
   ## Read in relevant data ##
   input_parameters <- as.list(environment()) # to be saved and used by call_bayesReact_core()

@@ -2,7 +2,6 @@
 #' @description Function using path to a fasta file or seqs dataframe to generate the seqs and seqList objects needed by Regmex to evaluate motif counts and sequence-specific probabilities, and saves the objects as independent .rds files. To obtain sequences from bioMart, please see the tutorial provided as part of the miReact package (https://github.com/muhligs/miReact/blob/master/makingUtrsForAdditionalSpecies.pdf).
 #'
 #' @param seq_in character or dataframe, path to a bioMart output (decompressed .fasta file) or a dataframe containing gene_name/gene_IDs, sequences and sequence lengths.
-#' @param out_path character, path to save seqs and seqList objects as .rds files. Default is current working directory.
 #' @param gene_id character specifying the gene ID that should be used (this HAS to match the IDs in the gene/transcript expression matrix). The input can be "gsym" (gene symbol, default), "gid" (ensembl gene id), "tid" (ensembl transcript id). Only relevant to specify when using a bioMart file as input.
 #' @param min_length integer, minimum sequence length to include in the seqs object. Default is 20.
 #' @param max_length integer, maximum sequence length to include in the seqs object. Default is 10,000.
@@ -10,15 +9,15 @@
 #'
 #' @importFrom dplyr %>%
 #' @importFrom rlang .data
-#' @return Saves seqs and seqList objects as .rds files in the specified out_path.
+#' @return Returns list with seqs and seqList objects.
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' build_seq_list(seq_in = "./mart_export.txt", out_path = "./path/", gene_id = "gsym")
+#' seq_out <- build_seq_list(seq_in = "./mart_export.txt", out_path = "./path/", gene_id = "gsym")
 #' }
 #'
-build_seq_list <- function(seq_in, out_path = "./", gene_id = "gsym", min_length = 20, max_length = 10000, one_seq_per_gene_id = T){
+build_seq_list <- function(seq_in, gene_id = "gsym", min_length = 20, max_length = 10000, one_seq_per_gene_id = T){
   ## If bioMart output is provided as a path, load and process it ##
   if (is.character(seq_in)) {
     # initial checks (for suggested packages, which are not necessarily pre-installed)

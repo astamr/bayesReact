@@ -33,6 +33,10 @@ rank_seq <- function(exp, data_type = "count", path = NULL, control_exp = NULL) 
   if (is.vector(medianExp)) {
     FC_rank <- apply(exp,2,function(x) order(x-medianExp, decreasing = TRUE))
     # add rownames used to check overlap with seqs data
+    if(is.vector(FC_rank)){ # If only one sample
+      FC_rank <- matrix(FC_rank, nrow = nrow(exp), dimnames = list(rownames(exp), colnames(exp)))
+    }
+    colnames(FC_rank) <- colnames(exp)
     rownames(FC_rank) <- rownames(exp)
   } else{
     # column-wise substraction of control condition
@@ -40,6 +44,9 @@ rank_seq <- function(exp, data_type = "count", path = NULL, control_exp = NULL) 
       order(exp[, c] - medianExp[, c], decreasing = TRUE)
     })
     # add col & rownames
+    if(is.vector(FC_rank)){ # If only one sample
+      FC_rank <- matrix(FC_rank, nrow = nrow(exp), dimnames = list(rownames(exp), colnames(exp)))
+    }
     colnames(FC_rank) <- colnames(exp)
     rownames(FC_rank) <- rownames(exp)
   }
