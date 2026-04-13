@@ -25,7 +25,7 @@ rank_seq <- function(exp, data_type = "count", path = NULL, control_exp = NULL) 
     medianExp <- apply(exp,1,stats::median)
   }else{
     # check that control_exp has the correct length
-    if(is.vector(control_exp) & nrow(exp) != length(control_exp) | !identical(dim(exp), dim(control_exp))) stop("provided expression profile(s) of the control setting(s) does not have the same dimensions as the 'exp' input" , call. = F)
+    if((is.vector(control_exp) && nrow(exp) != length(control_exp)) || (is.matrix(control_exp) && !identical(dim(exp), dim(control_exp)))) stop("provided expression profile(s) of the control setting(s) does not have the same dimensions as the 'exp' input" , call. = F)
     medianExp <- control_exp
   }
 
@@ -46,6 +46,7 @@ rank_seq <- function(exp, data_type = "count", path = NULL, control_exp = NULL) 
 
   # return output
   if (is.character(path)) {
+    if(substring(path, nchar(path)) != "/"){path <- paste0(path, "/")}
     file_path <- paste0(path, "FC_rank_", Sys.Date(), ".rds")
     saveRDS(FC_rank, file = file_path)
     return(file_path)

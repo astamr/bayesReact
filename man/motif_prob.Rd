@@ -24,8 +24,7 @@ motif_prob(
 
 \item{paths}{boolean specifying whether the input data is provided as file paths or as R objects.}
 
-\item{binom_approx}{boolean specifying whether to use a binomial approximation to calculate motif probabilities or the default n-step TPM assuming an underlying Markov chain. The binomial method assumes equal nucleotide frequencies
-as well as a random and independent distribution of nucleotides in the sequence of interest. The approach is most appropriate when considering a large set of longer k-mers (> 7-mers). If binom_approx = T, 'motifs' has to be specified as a k-mer (e.g., motifs = 8 for all 8-mers).}
+\item{binom_approx}{boolean specifying whether to use a binomial approximation to calculate motif probabilities or the default n-step TPM assuming an underlying Markov chain. The binomial method assumes a random and independent distribution of nucleotides in the sequence of interest. The approach is most appropriate when considering a large set of longer k-mers (> 7-mers). If binom_approx = T, 'motifs' has to be specified as a k-mer (e.g., motifs = 8 for all 8-mers).}
 
 \item{cores}{number of cores to use for parallelization. Consider increasing number of cores for long k-mers (default is the number of cores available).}
 

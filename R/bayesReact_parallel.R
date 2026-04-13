@@ -25,7 +25,7 @@
 #' @param posterior_approx algorithm for approximating the posterior distribution: "MCMC" (default) or "Laplace" (faster but slightly less accurate uncertainties).
 #' "Laplace" only works with model = "bayesReact" and output_type = "activity".
 #'
-#' @return The function returns the path to the output file(s), which is saved in 'out_path' and named 'out_name'. If output_type = "activity", the output contains a matrix of dimension motifs X cells/samples with motif activities.
+#' @return The function saves output file(s), named 'out_name', to the specified path 'out_path'. If output_type = "activity", the output contains a matrix of dimension motifs X cells/samples with motif activities.
 #' If output_type = "activity_summary", the output contains a list with the motif X cell/sample matrices: "motif_activity" (the motif activity estimates), "motif_post_prob" (the posterior probability of log P(|a| <= 0 | data) + log(2)),
 #' "motif_a_mean" (posterior mean of 'a'), "motif_a_sd" (posterior standard deviation of 'a'),
 #' "motif_a_CI_lower" (lower bound of credible interval (CI) for the underlying activity parameter 'a'), motif_a_CI_upper" (upper bound of CI),
@@ -35,7 +35,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' results_out_path <- bayesReact_parallel(lst_data = list(FC_rank = "./FC_rank_date.rds",
+#' bayesReact_parallel(lst_data = list(FC_rank = "./FC_rank_date.rds",
 #' motif_probs = "./seqXmot_probs.rds", motif_counts = "./seqXmot_counts.rds"),
 #' out_path = "./", out_name = "hs_motif_activity", account = "my_account_id")
 #' # Here, the output is saved in the current working directory as "hs_motif_activity.rds"
@@ -47,6 +47,7 @@ bayesReact_parallel <- function(lst_data, out_path, out_name = "motif_activity",
                                 MCMC_iterations = 3000, MCMC_chains = 3, MCMC_warmup = 500,
                                 MCMC_cores = MCMC_chains, MCMC_keep_warmup = F, posterior_approx = "MCMC"){
 
+  if(substring(out_path, nchar(out_path)) != "/"){out_path <- paste0(out_path, "/")}
   logs_file <- paste0(out_path, "logs_", out_name, ".txt")
   logs_con <- logs_file
   cat("\n", file = logs_con)
@@ -66,7 +67,7 @@ bayesReact_parallel <- function(lst_data, out_path, out_name = "motif_activity",
     cat("Error: \'posterior_approx\' must be either \"MCMC\" or \"Laplace\"\n", file = logs_con, append = T)
     stop("posterior_approx must be either \"MCMC\" or \"Laplace\"", call. = F)
   }
-  if (posterior_approx == "Laplace" & model != "bayesReact" & output_type != "activity") {
+  if (posterior_approx == "Laplace" && (model != "bayesReact" || output_type != "activity")) {
     cat("Error: Laplace approximation only works with the \"bayesReact\" model specification and \"activity\" output\n", file = logs_con, append = T)
     stop("Laplace approximation only works with the \"bayesReact\" model specification and \"activity\" output", call. = F)
   }

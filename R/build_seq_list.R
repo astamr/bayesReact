@@ -78,7 +78,7 @@ build_seq_list <- function(seq_in, out_path = "./", gene_id = "gsym", min_length
     # filter sequences
     seqs <- seq_in[seq_in$nchar > min_length & seq_in$nchar < max_length,]
     # generate seqlist
-    seqlist <- Regmex::seq.list.con(seqlist = seq_in$sequence, cores=1)
+    seqlist <- Regmex::seq.list.con(seqlist = seqs$sequence, cores=1)
     # return seqs and seqlist
     return(list(seqs = seqs, seqlist = seqlist))
 

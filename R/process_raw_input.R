@@ -36,6 +36,7 @@ process_raw_input <- function(exp, seq_data, motifs, out_path = "./",
                               seq_gene_id = "gsym", seq_min_length = 20, seq_max_length = 10000,
                               control_exp = NULL, approx_motif_prob = F, cores = parallel::detectCores()){
   # initial checks
+  if(substring(out_path, nchar(out_path)) != "/"){out_path <- paste0(out_path, "/")}
   if(is.data.frame(exp) + is.matrix(exp) + is.character(exp) == 0) stop("expression data input should be either a dataframe, matrix, or character string specifying an .rds input file" , call. = F)
 
   ## Process expression data ##
@@ -88,12 +89,29 @@ process_raw_input <- function(exp, seq_data, motifs, out_path = "./",
                                               binom_approx = approx_motif_prob, include_counts = T) # update include_counts if changes are made to the approx. model in motif_prob()
 
     cat("Successfully processed sequence-specific motif probabilities. \n")
+
+    # For FC-ranking, ensure to only use genes present in seqs
+    gene_set <- intersect(seqs$gid, rownames(exp))
+    exp <- exp[gene_set,, drop = F]
   }
-  gene_set <- intersect(seqs$gid, rownames(exp))
-  exp <- exp[gene_set,]
 
   # generate fold-change (FC) based sequence ranks
-  FC_rank_path <- list(FC_rank_path = bayesReact::rank_seq(exp, data_type = "norm_scale_exp", path = out_path))
+  if (process_all == F & is.vector(seq_data)){
+    seqs <- readRDS(seq_data[1])
+
+    # check overlap in sequences between expression and sequence data
+    if (length(intersect(seqs$gid, rownames(exp)))/length(rownames(exp)) < 0.5) stop("Less than 50% of the genes in the expression data have a matching sequences in the provided sequence data. Please check if the same gene IDs/names are used?" , call. = F)
+    print(paste0(length(intersect(seqs$gid, rownames(exp)))/length(rownames(exp))*100, "% of genes in the expression data have a matching sequences in the provided sequence data. ",
+                 length(rownames(exp)) - length(intersect(seqs$gid, rownames(exp))), " genes will be removed from the expression data and fold-change calculation."))
+
+    # check that paths are given in correct order
+    if (!is.data.frame(seqs)) stop("seq_data[1] input path should be a dataframe, please check that paths to sequence and sequence list objects haven't been swapped.", call. = F)
+
+    # For FC-ranking, ensure to only use genes present in seqs
+    gene_set <- intersect(seqs$gid, rownames(exp))
+    exp <- exp[gene_set,, drop = F]
+  }
+  FC_rank_path <- list(FC_rank_path = bayesReact::rank_seq(exp, data_type = "norm_scale_exp", path = out_path, control_exp = control_exp))
   # if only processing expression data, return file path for the FC-based sequence ranks
   if (process_all == F) {
     warning("Only fold-change ranks were computed. Please set process_all = TRUE to process sequence and motif data. \nPlease ensure to only included genes/transcripts for fold-change calculation that are also present in the sequence data.")

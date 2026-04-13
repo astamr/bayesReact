@@ -63,7 +63,7 @@ Either "bayesReact" (default) or "BF" (Bayes Factor; to compare the performance 
 "Laplace" only works with model = "bayesReact" and output_type = "activity".}
 }
 \value{
-The function returns the path to the output file(s), which is saved in 'out_path' and named 'out_name'. If output_type = "activity", the output contains a matrix of dimension motifs X cells/samples with motif activities.
+The function saves output file(s), named 'out_name', to the specified path 'out_path'. If output_type = "activity", the output contains a matrix of dimension motifs X cells/samples with motif activities.
 If output_type = "activity_summary", the output contains a list with the motif X cell/sample matrices: "motif_activity" (the motif activity estimates), "motif_post_prob" (the posterior probability of log P(|a| <= 0 | data) + log(2)),
 "motif_a_mean" (posterior mean of 'a'), "motif_a_sd" (posterior standard deviation of 'a'),
 "motif_a_CI_lower" (lower bound of credible interval (CI) for the underlying activity parameter 'a'), motif_a_CI_upper" (upper bound of CI),
@@ -76,7 +76,7 @@ bayesReact_parallel() performs data partitioning and currently utilizes the Slur
 }
 \examples{
 \dontrun{
-results_out_path <- bayesReact_parallel(lst_data = list(FC_rank = "./FC_rank_date.rds",
+bayesReact_parallel(lst_data = list(FC_rank = "./FC_rank_date.rds",
 motif_probs = "./seqXmot_probs.rds", motif_counts = "./seqXmot_counts.rds"),
 out_path = "./", out_name = "hs_motif_activity", account = "my_account_id")
 # Here, the output is saved in the current working directory as "hs_motif_activity.rds"

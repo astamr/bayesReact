@@ -20,6 +20,7 @@
 #'
 norm_scale_seq <- function(exp, data_type = "count", save_rds = T, path = "./") {
   # initial check(s)
+  if(substring(path, nchar(path)) != "/"){path <- paste0(path, "/")}
   if(NA %in% exp) stop("Input expression matrix contains NA values. Please remove rows containing NAs.", call. = F)
   if(!(data_type %in% c("count", "CPM", "TPM"))) stop("Input data_type is not valid. Please use either 'count', 'CPM', or 'TPM'.", call. = F)
 
@@ -37,7 +38,7 @@ norm_scale_seq <- function(exp, data_type = "count", save_rds = T, path = "./") 
   }
   if (data_type %in% c("CPM", "TPM")){
     # scale expression by multiplying with the median of each sample
-    exp <- apply(exp, 2, function(x) x*stats::median(x))
+    #exp <- apply(exp, 2, function(x) x*stats::median(x))
     exp <- log2(exp+1)
   }
 

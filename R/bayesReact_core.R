@@ -53,7 +53,7 @@ bayesReact_core <- function(lst_data, threshold_motif_prob = 1e-10, threshold_mo
     if (!(posterior_approx %in% c("MCMC", "Laplace"))) {
       stop("posterior_approx must be either \"MCMC\" or \"Laplace\"", call. = F)
     }
-    if (posterior_approx == "Laplace" & model != "bayesReact" & !(output_type %in% c("activity", "full_model"))) {
+    if (posterior_approx == "Laplace" && (model != "bayesReact" || !(output_type %in% c("activity", "full_model")))) {
       stop("Laplace approximation only works with the \"bayesReact\" model specification and \"activity\" or \"full_model\" output", call. = F)
     }
 
@@ -84,7 +84,7 @@ bayesReact_core <- function(lst_data, threshold_motif_prob = 1e-10, threshold_mo
       # fit model for each sample in parallel to obtain the condition-specific logml and BF
       BF_out <- parallel::mclapply(1:inlist$C, function(c) bayesReact::fit_motif_model(input = list(C = 1, K = inlist$K, sum_log_l = inlist$sum_log_l[c], sum_log_r = inlist$sum_log_r[c], sum_log_1_minus_r = inlist$sum_log_1_minus_r[c]),
                                                                                        model = model_stan, model_type = "BF", output_type = output_type, CI = CI, iterations = MCMC_iterations, chains = 1, warmup = MCMC_warmup, cores = MCMC_cores,
-                                                                                       keep_warmup = MCMC_keep_warmup), mc.cores = MCMC_cores-1)
+                                                                                       keep_warmup = MCMC_keep_warmup), mc.cores = max(1, MCMC_cores-1))
       # combine results for all conditions
       cat("Succesfull model fit. \n")
 
@@ -183,7 +183,10 @@ bayesReact_core <- function(lst_data, threshold_motif_prob = 1e-10, threshold_mo
   }
 
   # threshold for motif count
-  if(is.integer(threshold_motif_count)){
+  if (!is.null(threshold_motif_count)) {
+    if (!is.numeric(threshold_motif_count) || length(threshold_motif_count) != 1 || threshold_motif_count < 1 || threshold_motif_count != floor(threshold_motif_count)) {
+      stop("threshold_motif_count must be NULL or a single non-negative integer value.", call. = FALSE)
+    }
     motif_counts[motif_counts > threshold_motif_count] <- threshold_motif_count
   }
 
