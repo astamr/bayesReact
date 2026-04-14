@@ -20,6 +20,14 @@ prep_model_input <- function(in_seq_motif_data, threshold_motif_prob = 1e-10, th
   nr_obs <- dim(in_seq_motif_data$FC_rank)[[2]]
   nr_seqs <- dim(in_seq_motif_data$FC_rank)[[1]]
 
+  # threshold for motif count
+  if (!is.null(threshold_motif_count)) {
+    if (!is.numeric(threshold_motif_count) || length(threshold_motif_count) != 1 || threshold_motif_count < 1 || threshold_motif_count != floor(threshold_motif_count)) {
+      stop("threshold_motif_count must be NULL or a single non-negative integer value.", call. = FALSE)
+    }
+    in_seq_motif_data$motif_counts[in_seq_motif_data$motif_counts > threshold_motif_count] <- threshold_motif_count
+  }
+
   # re-scale total sequence interval to have length one [0, 1] across which events/motifs occur
   if (is.numeric(threshold_motif_prob)) {
     l_vector <- (-log1p(-ifelse(in_seq_motif_data$motif_probs < threshold_motif_prob, threshold_motif_prob, in_seq_motif_data$motif_probs)))
