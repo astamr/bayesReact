@@ -49,6 +49,8 @@ build_seq_list <- function(seq_in, gene_id = "gsym", min_length = 20, max_length
     if (sum(grepl("N",seqs$sequence)) > 0) {
       seqs <- seqs[!grepl("N",seqs$sequence),]
     }
+    # remove sequences with extremely short and long lengths (default is min_length < 20 and max_length > 10000)
+    seqs <- seqs[seqs$nchar > min_length & seqs$nchar < max_length,]
     # only retain one sequence per gene
     if (one_seq_per_gene_id) {
       if (requireNamespace("dplyr", quietly = TRUE) == F) {
@@ -58,8 +60,6 @@ build_seq_list <- function(seq_in, gene_id = "gsym", min_length = 20, max_length
         dplyr::filter(nchar == max(nchar)) %>%
         dplyr::slice(1) %>% dplyr::ungroup()
     }
-    # remove sequences with extremely short and long lengths (default is min_length < 20 and max_length > 10000)
-    seqs <- seqs[seqs$nchar > min_length & seqs$nchar < max_length,]
     print(paste0("After filtering, ", dim(seqs)[[1]], " sequences retained when constructing seqs dataframe."))
     # order by gene ID and length
     seqs <- seqs[order(seqs$gid,-seqs$nchar),]
