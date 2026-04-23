@@ -11,6 +11,7 @@
 #' @param cores number of cores to use for parallelization. Consider increasing number of cores for long k-mers (default is the number of cores available).
 #' @param out_path path to output directory (default is NULL, where the output is returned rather than saved).
 #' @param include_counts the default is TRUE and ensures that the matrix with motif counts is also returned. This parameter should ONLY be FALSE when running a light-weight approx. approach on a smaller computer.
+#' @param markov_order integer specifying order of motif background model: 0 uses nucleotide frequencies (default), and 1 uses dinucleotide transition probabilities.
 #'
 #' @return two matrices, motif_probs and motif_counts, containing sequence-specific motif probabilities and motif counts, respectively.
 #' @export
@@ -28,7 +29,7 @@
 #'
 #'
 motif_prob <- function(motifs, seqs, seqlist, paths = T, binom_approx = F, cores = parallel::detectCores(),
-                       out_path = NULL, include_counts = T) {
+                       out_path = NULL, include_counts = T, markov_order = 0) {
 
   # load data if file paths are provided
   if(paths) {
@@ -57,12 +58,12 @@ motif_prob <- function(motifs, seqs, seqlist, paths = T, binom_approx = F, cores
     names(patterns) <- motifs
 
     # compute probability of motif occurrence in each sequence
-    motif_probs <- do.call(cbind, parallel::mclapply(patterns, function(x) unlist(lapply(seqlist, function(y) bayesReact::pd_mrs2(x,y))), mc.cores = cores))
+    motif_probs <- do.call(cbind, parallel::mclapply(patterns, function(x) unlist(lapply(seqlist, function(y) bayesReact::pd_mrs2(x,y, markov_order = markov_order))), mc.cores = cores))
     colnames(motif_probs) <- motifs
     rownames(motif_probs) <- seqs$gid # match sequence and expression names/gene IDs
 
     # check for NAs
-    if(NA %in% motif_probs) stop("NA introduced when calculating motif probabilities. Try checking input data for errors.", call. = F)
+    if(NA %in% motif_probs | NaN %in% motif_probs) stop("NA introduced when calculating motif probabilities. Try checking input data for errors.", call. = F)
 
   } else { # Binomial approximation (consider MMN implementation, which works for all REs)
 

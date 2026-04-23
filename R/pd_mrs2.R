@@ -5,6 +5,8 @@
 #'
 #' @param pattern state space (transition matrix) for motif of interest.
 #' @param seq sequence for which the probability of motif occurrence is evaluated.
+#' @param markov_order Order of motif background model: `0` uses nucleotide
+#'   frequencies (default), and `1` uses dinucleotide transition probabilities.
 #'
 #' @importFrom expm %^%
 #' @return motif probability (pd_mrs2).
@@ -13,13 +15,20 @@
 #' @examples
 #' # See 'https://github.com/muhligs/miReact'.
 #'
-pd_mrs2 <- function(pattern, seq){ # in miReact, the function is named 'pd.mrs2'.
-  #tm <- Regmex:::transition.matrix(pattern$matrix, seq$freq.mono)
-  transition.matrix <- utils::getFromNamespace("transition.matrix", "Regmex")
-  tm <- transition.matrix(pattern$matrix, seq$freq.mono)
-  finl.st <- pattern$endState
-  tm[finl.st,] <- 0
-  tm[finl.st,finl.st] <- 1
-  return(1-sum((tm %^% seq$length)[pattern$startState,-finl.st]))
+pd_mrs2 <- function(pattern, seq, markov_order = 0){ # in miReact, the function is named 'pd.mrs2'.
+  if (markov_order == 0){
+    #tm <- Regmex:::transition.matrix(pattern$matrix, seq$freq.mono)
+    transition.matrix <- utils::getFromNamespace("transition.matrix", "Regmex")
+    tm <- transition.matrix(pattern$matrix, seq$freq.mono)
+    finl.st <- pattern$endState
+    tm[finl.st,] <- 0
+    tm[finl.st,finl.st] <- 1
+    return(1-sum((tm %^% seq$length)[pattern$startState,-finl.st]))
+  }
+  if (markov_order == 1){
+    prob.dist.di <- utils::getFromNamespace("prob.dist.di", "Regmex")
+    return(prob.dist.di(pattern, seq, nt.null = 2, overlap = FALSE)$prob.1.or.more)
+  }
+  stop("markov_order should either 0 or 1.", call. = F)
 }
 

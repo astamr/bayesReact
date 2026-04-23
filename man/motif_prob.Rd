@@ -12,7 +12,8 @@ motif_prob(
   binom_approx = F,
   cores = parallel::detectCores(),
   out_path = NULL,
-  include_counts = T
+  include_counts = T,
+  markov_order = 0
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ motif_prob(
 \item{out_path}{path to output directory (default is NULL, where the output is returned rather than saved).}
 
 \item{include_counts}{the default is TRUE and ensures that the matrix with motif counts is also returned. This parameter should ONLY be FALSE when running a light-weight approx. approach on a smaller computer.}
+
+\item{markov_order}{integer specifying order of motif background model: 0 uses nucleotide frequencies (default), and 1 uses dinucleotide transition probabilities.}
 }
 \value{
 two matrices, motif_probs and motif_counts, containing sequence-specific motif probabilities and motif counts, respectively.

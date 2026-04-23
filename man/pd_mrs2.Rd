@@ -4,12 +4,15 @@
 \alias{pd_mrs2}
 \title{miReact code dependencies}
 \usage{
-pd_mrs2(pattern, seq)
+pd_mrs2(pattern, seq, markov_order = 0)
 }
 \arguments{
 \item{pattern}{state space (transition matrix) for motif of interest.}
 
 \item{seq}{sequence for which the probability of motif occurrence is evaluated.}
+
+\item{markov_order}{Order of motif background model: \code{0} uses nucleotide
+frequencies (default), and \code{1} uses dinucleotide transition probabilities.}
 }
 \value{
 motif probability (pd_mrs2).
