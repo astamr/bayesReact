@@ -63,7 +63,7 @@ motif_prob <- function(motifs, seqs, seqlist, paths = T, binom_approx = F, cores
     rownames(motif_probs) <- seqs$gid # match sequence and expression names/gene IDs
 
     # check for NAs
-    if(NA %in% motif_probs | NaN %in% motif_probs) stop("NA introduced when calculating motif probabilities. Try checking input data for errors.", call. = F)
+    #if (anyNA(motif_probs)) {stop("NA/NaN introduced when calculating motif probabilities. Try checking input data for errors.", call. = FALSE)}
 
   } else { # Binomial approximation (consider MMN implementation, which works for all REs)
 
