@@ -98,7 +98,9 @@ motif_prob <- function(motifs, seqs, seqlist, paths = T, binom_approx = F, cores
         cond_nt <- motif[mot_nt_pos] # nt that we condition on
         p_joint <- seq_freq_di[di_nt]
         p_marg <- seq_freq_mono[cond_nt]
-        return(p_joint / p_marg) # P(m_i | m_i-1) = P(m_i, m_i-1) / P(m_i-1)
+        # Conditional prob: P(m_i | m_i-1) = P(m_i, m_i-1) / P(m_i-1)
+        if (is.na(p_marg) || p_marg == 0) return(0)  # Avoid dividing by NA/0; motif not possible
+        return(min(p_joint / p_marg, 1))             # Clamp cond. prob. in case of rounding issues
       }
       mot_occ_prob_cond <- prod(unlist(lapply(seq_along(motif_di), function(di) cond_prob(di))))
       mot_occ_prob <- mot_occ_prob_pos1*mot_occ_prob_cond # Account for di-nt context through conditional probabilities
