@@ -65,60 +65,83 @@ motif_prob <- function(motifs, seqs, seqlist, paths = T, binom_approx = F, cores
     # check for NAs
     #if (anyNA(motif_probs)) {stop("NA/NaN introduced when calculating motif probabilities. Try checking input data for errors.", call. = FALSE)}
 
-  } else { # Binomial approximation (consider MMN implementation, which works for all REs)
+  } else { # Binomial approximation (consider MMN implementation, which includes faster motif counts)
 
     # check that the method is only used for k-mers
     if(!is.numeric(motifs_int)) stop("'motifs' should be an integer specifying k-mers to by used. Alternatively, consider using binom_approx = F.", call. = F)
 
-    # calculate probability of at least one motif occurrence in each sequence (0. order approx)
-    binom_prob <- function(motif, seq_freq, seq_len){
-      mot_len <- nchar(motif)
-      if(seq_len < mot_len){return(0)} # handle motif longer than seq
-      motif <- unlist(strsplit(motif, ""))
-      trials <- seq_len - mot_len + 1 # number of trials is the number of positions where a motif can potentially occur in the sequence
-      mot_occ_prob <- unlist(lapply(motif, function(x) seq_freq[x])) # probability of each nucleotide in the motif is its frequency in the sequence
-      mot_occ_prob <- prod(mot_occ_prob) # probability of motif occurrence (success at each trial) is the product of the probabilities of each nucleotide in the motif
+    # pre-compute motif and seq representations to avoid repeated reconstruction for each mot and seq pair
+    nt_idx <- c(A = 1L, C = 2L, G = 3L, T = 4L) # integer indexing (possible due to consistent ordering)
+    nts <- c("A", "C", "G", "T")
+    motif_idx <- lapply(motifs, function(m) nt_idx[strsplit(m, "", fixed = TRUE)[[1L]]]) # convert each motif to integer indices once
+    k <- motifs_int
+    S <- length(seqlist) # number of sequences
+    M <- length(motifs) # number of motifs
+    seq_lens <- vapply(seqlist, function(y) y$length, integer(1L))
 
-      # probability of no motif occurrence in the sequence is the probability of failure at each trial
-      no_motif_prob <- (1 - mot_occ_prob)^trials
-      # probability of at least one motif occurrence in the sequence thus becomes '1 - probability of no motif occurrence'
-      return(1 - no_motif_prob)
+    # store nt freqs as S x 4 matrix once
+    seqs_freq_nt <- do.call(rbind, lapply(seqlist, function(y) y$freq.mono[nts]))
+    seqs_freq_nt[is.na(seqs_freq_nt)] <- 0
+    seqs_freq_nt_log <- log(seqs_freq_nt) # work in log-space for numerical stability
+
+    # store conditional probs (di-nt) once (only if 1st-order model): stack con.prob.di as 4 (m_i) x 4 (m_{i-1}) x S array
+    # Important: in con.prob.di cols sum to 1, so con.prob.di[i, j] = P(m_i = i | m_{i-1} = j), for m = m_1...m_k
+    if (markov_order == 1L) {
+      cond_prob_log <- array(unlist(lapply(seqlist, function(y) log(as.numeric(y$con.prob.di[nts, nts])))), dim = c(4L, 4L, S))
+      cond_prob_log[!is.finite(cond_prob_log)] <- -Inf
     }
-    # calculate probability of at least one motif occurrence in each sequence  (1. order approx)
-    binom_prob_di <- function(motif, seq_freq_mono, seq_freq_di, seq_len){
-      mot_len <- nchar(motif)
-      if(seq_len < mot_len){return(0)} # handle motif longer than seq
-      motif <- unlist(strsplit(motif, ""))
-      trials <- seq_len - mot_len + 1 # number of trials is the number of positions where a motif can potentially occur in the sequence
 
-      mot_occ_prob_pos1 <- seq_freq_mono[motif[1]] # Marginal prob. at first nt position
-      motif_di <- paste0(motif[-mot_len], motif[-1])
-      cond_prob <- function(mot_nt_pos){ # Motif position that conditional prob. is computed for
-        di_nt <- motif_di[mot_nt_pos]
-        cond_nt <- motif[mot_nt_pos] # nt that we condition on
-        p_joint <- seq_freq_di[di_nt]
-        p_marg <- seq_freq_mono[cond_nt]
-        # Conditional prob: P(m_i | m_i-1) = P(m_i, m_i-1) / P(m_i-1)
-        if (is.na(p_marg) || p_marg == 0) return(0)  # Avoid dividing by NA/0; motif not possible
-        return(min(p_joint / p_marg, 1))             # Clamp cond. prob. in case of rounding issues
+    # calculate probability of at least one motif occurrence in each sequence (done motif-wise across all seqs)
+    binom_ssp <- if (markov_order == 0L) { # 0th-order: SSP from nt freqs
+      function(m){
+        mot <- motif_idx[[m]]
+        SSP_m <- numeric(S)
+        seqs_eval <- seq_lens >= k # handle motif longer than seq (SSP = 0)
+        # probability of each nt in the motif is its frequency in the sequence
+        mot_occ_prob_log <- rowSums(seqs_freq_nt_log[seqs_eval, mot, drop = FALSE]) # probability of motif occurrence (success at each trial) is the sum of the log-probs of each nt in the motif
+        trials <- seq_lens[seqs_eval] - k + 1 # number of trials is the number of positions where a motif can potentially occur in the sequence
+
+        # probability of at least one motif occurrence in the sequence thus becomes '1 - probability of no motif occurrence'
+        # SSP = 1 - (1 - P(m))^trials (log1p & expm1 to handle small P(m))
+        SSP_m[seqs_eval] <- -expm1(trials * log1p(-exp(pmin(mot_occ_prob_log, 0))))
+        return(SSP_m)
       }
-      mot_occ_prob_cond <- prod(unlist(lapply(seq_along(motif_di), function(di) cond_prob(di))))
-      mot_occ_prob <- mot_occ_prob_pos1*mot_occ_prob_cond # Account for di-nt context through conditional probabilities
+    } else if (markov_order == 1L) { # 1st-order: SSP from dinucleotide context via conditional probs
+      function(m){
+        mot <- motif_idx[[m]]
+        SSP_m <- numeric(S)
+        seqs_eval <- seq_lens >= k
+        n_seqs_eval <- sum(seqs_eval) # number of seqs passing the length filter
+        mot_occ_prob_pos1_log <- seqs_freq_nt_log[seqs_eval, mot[1L]] # marginal prob. at first nt position
+        if (k == 1L) {
+          mot_occ_prob_log <- mot_occ_prob_pos1_log
+        } else {
+          # Conditional prob: P(m_i | m_i-1) = P(m_i, m_i-1) / P(m_i-1)
+          m_cond_prob_log <- matrix( # Account for di-nt context through conditional probabilities
+            vapply(seq_len(k - 1L), function(i) cond_prob_log[mot[i + 1L], mot[i], seqs_eval], numeric(n_seqs_eval)),
+            nrow = n_seqs_eval)
+          mot_occ_prob_log <- mot_occ_prob_pos1_log + rowSums(m_cond_prob_log)
+        }
+        trials <- seq_lens[seqs_eval] - k + 1
 
-      # Binomial SSP: probability of no motif occurrence in the sequence is the probability of failure at each trial
-      no_motif_prob <- (1 - mot_occ_prob)^trials
-      # probability of at least one motif occurrence in the sequence thus becomes '1 - probability of no motif occurrence'
-      return(1 - no_motif_prob)
+        # probability of at least one motif occurrence in the sequence thus becomes '1 - probability of no motif occurrence'
+        SSP_m[seqs_eval] <- -expm1(trials * log1p(-exp(pmin(mot_occ_prob_log, 0))))
+        return(SSP_m)
+      }
+    } else {
+      stop("'markov_order' should be either 0 or 1.", call. = F)
     }
+    # pre-allocate SSP matrix (fill in chunks to bound max memory)
+    motif_probs <- matrix(0, nrow = S, ncol = M, dimnames = list(seqs$gid, motifs))
+    chunk_size <- min(256, 4^k)
 
-    # calculate motif probabilities for each motif in each sequence
-    if(markov_order == 0){
-      motif_probs <- do.call(rbind, parallel::mclapply(motifs, function(x) unlist(lapply(seqlist, function(y) binom_prob(x, y[2]$freq.mono, y[5]$length))), mc.cores = cores)) }
-    if(markov_order == 1){
-      motif_probs <- do.call(rbind, parallel::mclapply(motifs, function(x) unlist(lapply(seqlist, function(y) binom_prob_di(x, y[2]$freq.mono, y[3]$freq.di, y[5]$length))), mc.cores = cores)) }
-    rownames(motif_probs) <- motifs
-    colnames(motif_probs) <- seqs$gid # match sequence and expression names/gene IDs
-    motif_probs <- t(motif_probs) # transpose to match the output format from the non-approximate approach
+    # iterate over motif chunks
+    for (start in seq.int(1L, M, by = chunk_size)) {
+      idx <- start:min(start + chunk_size - 1, M)
+      SSP_chunk <- parallel::mclapply(idx, binom_ssp, mc.cores = cores)
+      for (mots in seq_along(idx)) motif_probs[, idx[mots]] <- SSP_chunk[[mots]]
+      rm(SSP_chunk)
+    }
   }
 
   ## Save or return motif probabilities ##
