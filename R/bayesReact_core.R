@@ -79,6 +79,27 @@ bayesReact_core <- function(lst_data, threshold_motif_prob = 1e-10, threshold_mo
     # generate input data to evaluate activity of motif m across all conditions (samples/cells)
     inlist <- bayesReact::prep_model_input(in_seq_motif_data, threshold_motif_prob = threshold_motif_prob, threshold_motif_count = threshold_motif_count)
 
+    # handle no motif obs (motif_count = 0)
+    if (inlist$K == 0) {cat("No motif observations. Returning zero activity.\n")
+      # return 0 format given output type
+      if (output_type == "activity") {return(stats::setNames(rep(0, inlist$C), colnames(in_seq_motif_data$FC_rank)))}
+      if (output_type == "activity_summary") {
+        out <- data.frame(
+          mean = rep(0, inlist$C),
+          activity = rep(0, inlist$C),
+          post_prob = rep(0, inlist$C),
+          sd = rep(0, inlist$C),
+          stringsAsFactors = FALSE)
+        out[[paste0(CI[1] * 100, "%")]] <- 0
+        out[[paste0(CI[2] * 100, "%")]] <- 0
+        out$n_eff <- 0
+        out$Rhat <- 0
+        if (model == "BF") {out$lBF <- 0}
+        rownames(out) <- colnames(in_seq_motif_data$FC_rank)
+        return(out)}
+      if (output_type == "full_posterior") {return(list(a = matrix(0, nrow = 1, ncol = inlist$C)))}
+      if (output_type == "full_model") {return(NA)}}
+
     # if running in BF mode
     if (model == "BF"){
       # fit model for each sample in parallel to obtain the condition-specific logml and BF
