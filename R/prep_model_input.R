@@ -30,9 +30,10 @@ prep_model_input <- function(in_seq_motif_data, threshold_motif_prob = 1e-10, th
   # Check correct prob input
   if (anyNA(in_seq_motif_data$motif_probs) || any(!is.finite(in_seq_motif_data$motif_probs))) {
     stop("motif_probs contains NA/NaN/Inf.", call. = FALSE)}
-  if (any(in_seq_motif_data$motif_probs < 0)|| any(in_seq_motif_data$motif_probs > 1)) {
+  if (any(in_seq_motif_data$motif_probs < -1e-10)|| any(in_seq_motif_data$motif_probs > 1)) {
     stop("motif_probs contains invalid values < 0 or > 1.", call. = FALSE)
   }
+  if (is.null(threshold_motif_prob)){in_seq_motif_data$motif_probs[which(in_seq_motif_data$motif_probs < 0)] <- 0} # Handle Regmex rounding issues
 
   # re-scale total sequence interval to have length one [0, 1] across which events/motifs occur
   if (is.numeric(threshold_motif_prob)) {

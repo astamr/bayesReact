@@ -26,8 +26,26 @@ pd_mrs2 <- function(pattern, seq, markov_order = 0){ # in miReact, the function 
     return(1-sum((tm %^% seq$length)[pattern$startState,-finl.st]))
   }
   if (markov_order == 1){
-    prob.dist.di <- utils::getFromNamespace("prob.dist.di", "Regmex")
-    return(prob.dist.di(pattern, seq, nt.null = 2, overlap = FALSE)$prob.1.or.more)
+    #prob.dist.di <- utils::getFromNamespace("prob.dist.di", "Regmex")
+    #return(prob.dist.di(pattern, seq, nt.null = 2, overlap = FALSE)$prob.1.or.more)
+    transition.matrix.di <- utils::getFromNamespace("transition.matrix.di", "Regmex")
+
+    tm <- transition.matrix.di(pattern$matrix.di, seq$con.prob.di)
+    states <- rownames(tm)
+
+    state_part <- sub("[ACGT]$", "", states)
+    finl.st <- which(state_part %in% as.character(pattern$endState))
+
+    tm[finl.st, ] <- 0
+    tm[cbind(finl.st, finl.st)] <- 1
+
+    init.st <- stats::setNames(numeric(length(states)), states)
+    for (b in names(seq$freq.mono)) {
+      di.st <- paste0(pattern$matrix[pattern$startState, b], b)
+      init.st[di.st] <- init.st[di.st] + as.numeric(seq$freq.mono[b])
+    }
+    p_no_hit <- sum((init.st %*% (tm %^% (seq$length - 1L)))[, -finl.st, drop = FALSE])
+    return(1 - p_no_hit)
   }
   stop("markov_order should either 0 or 1.", call. = F)
 }
