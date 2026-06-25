@@ -189,7 +189,7 @@ bayesReact_parallel <- function(lst_data, out_path, out_name = "motif_activity",
   t <- 4 + round(8*(nr_motifs)/(4^7), 0) + as.integer(MCMC_iterations/10000)
   mem <- 3 + as.integer((MCMC_iterations*MCMC_chains)/10000) + as.integer(samples_per_partition/500)
   if (model == "BF") {
-    #t <- 6 + round(8*(nr_motifs)/(4^7), 0) + as.integer(MCMC_iterations/10000)
+    t <- 6 + round(8*(nr_motifs)/(4^7), 0) + as.integer(MCMC_iterations/10000)
     mem <- 4 + as.integer((MCMC_iterations*MCMC_chains)/10000) + as.integer(samples_per_partition/500)
   }
   if (posterior_approx == "Laplace"){
