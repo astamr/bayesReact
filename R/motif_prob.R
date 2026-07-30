@@ -45,7 +45,15 @@ motif_prob <- function(motifs, seqs, seqlist, paths = T, binom_approx = F, cores
 
   ## Extract non-overlapping motif counts for each sequence ##
   if (include_counts) { # consider adding grep for binom_approx == T (Faster approach to getting count data)
-    motif_counts <- do.call(cbind, parallel::mclapply(motifs, function(x) Regmex::n.obs.mot(x, seqlist, overlap =F), mc.cores = cores))
+    if (is.integer(motifs_int)){
+      motif_counts <- count_all_kmers_nonoverlap(motifs_int, seqlist)
+      # for overlapping k-mer motif occurrences use instead:
+      #motif_counts <- Biostrings::oligonucleotideFrequency(Biostrings::DNAStringSet(seqs$sequence),
+      #  width = motifs_int, step = 1L, as.prob = FALSE, fast.moving.side = "right",
+      #  with.labels = TRUE, simplify.as = "matrix")
+    } else{
+      motif_counts <- do.call(cbind, parallel::mclapply(motifs, function(x) Regmex::n.obs.mot(x, seqlist, overlap =F), mc.cores = cores))
+    }
     colnames(motif_counts) <- motifs
     rownames(motif_counts) <- seqs$gid # match sequence and expression names/gene IDs
   }
