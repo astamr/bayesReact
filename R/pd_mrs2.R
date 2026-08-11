@@ -10,11 +10,11 @@
 #'
 #' @importFrom expm %^%
 #' @return motif probability (pd_mrs2).
-#' @export
 #'
 #' @examples
 #' # See 'https://github.com/muhligs/miReact'.
 #'
+#' @keywords internal
 pd_mrs2 <- function(pattern, seq, markov_order = 0){ # in miReact, the function is named 'pd.mrs2'.
   if (markov_order == 0){
     #tm <- Regmex:::transition.matrix(pattern$matrix, seq$freq.mono)

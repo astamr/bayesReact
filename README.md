@@ -54,7 +54,7 @@ The bayesReact package is developed to integrate with Conda, and all
 dependencies can therefore be installed as follows:
 
 ``` bash
-conda create -n bayesReact_env r-expm parallel r-rstan r-codetools r-dplyr r-bh r-devtools r-base=4.3
+conda create -n bayesReact_env r-expm parallel r-rstan r-codetools r-dplyr r-bh r-devtools r-base r-remotes
 conda activate bayesReact_env
 ```
 

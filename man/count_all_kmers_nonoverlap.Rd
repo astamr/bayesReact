@@ -7,6 +7,6 @@
 count_all_kmers_nonoverlap(k, seqlist)
 }
 \description{
-Fast exact non-overlapping counting of all k-mers using C++.
+Calls ./src/fast_kmers_counting.cpp
 }
 \keyword{internal}

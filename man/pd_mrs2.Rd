@@ -26,3 +26,4 @@ bayesReact depends on both Regmex and miReact for handling input data and parall
 # See 'https://github.com/muhligs/miReact'.
 
 }
+\keyword{internal}
