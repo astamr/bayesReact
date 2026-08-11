@@ -7,7 +7,7 @@
 #' @param exp numerical gene expression (or other relevant measure) matrix (rows = genes, columns = samples/cells) or character string specifying file path to expression data (saved in .rds format). Input should NOT be log-transformed. Examples include raw counts (default), CPM, or RPKM values.
 #' @param seq_data character string, dataframe, or vector; path to a bioMart output (decompressed .fasta file); a dataframe containing gene_name/gene_IDs, sequences, and sequence lengths;
 #' or a character vector containing the paths to 'seqs' and 'seqlist' objects (e.g., seq_data = c("./seqs.rds", "./seqlist.rds")).
-#' @param motifs vector with motifs, e.g., c("ACGTAGT", "GTACAAG"), or an integer specifying the k-mers to be used, e.g., 7 for all 7-mers.
+#' @param motifs vector with motifs, e.g., c("ACGTAGT", "GTACAAG"); an integer specifying the k-mers to be used, e.g., 7 for all 7-mers; or a list of 'aligned motif sites'/PCM/PPM/PWM matrices (e.g., list(mot1 = matrix(nrow = 4, dimnames = list(c("A", "C", "G", "T"), NULL)))).
 #' A motif is specified as a regular expression on the alphabet {A,C,G,T}.
 #' @param out_path character string specifying directory to save .rds files in. Default is current working directory.
 #' @param exp_type character string specifying type of data to normalize and/or scale. Input can be "count" (default) or "CPM" (counts per million; TPM/RPKM can also be used here).
@@ -19,8 +19,10 @@
 #' @param seq_min_length integer, minimum sequence length to include in the seqs object and list. Default is 20.
 #' @param seq_max_length integer, maximum sequence length to include in the seqs object and list. Default is 10,000.
 #' @param control_exp optional numerical vector or matrix used for fold-change score calculation and ranking. Used when expression values for a user-defined control setting(s) is available. It should match the row ordering of the 'exp' input (vector) as well as the column ordering (matrix). If NULL (default), the median gene expressions of 'exp' are used instead.
-#' @param approx_motif_prob logical, whether to use a binomial approximation to compute motif probabilities (default is FALSE).
+#' @param approx_motif_prob logical, whether to use a binomial approximation to compute motif probabilities (default is FALSE; this can be very slow especially for PCM/PPM/PWM motifs).
 #' @param cores integer, number of cores to use for parallel processing when computing motif probabilities (default is all available cores).
+#' @param markov_order integer specifying order of motif background model used to obtain sequence-specific motif probabilities (SSPs): 0 uses nucleotide frequencies (default), and 1 uses dinucleotide transition probabilities.
+#' @param pwm_motif_type character specifying the motif representation (only used if motifs are provided as a list). Should be either "motif_sites", "pcm" (nt counts), "ppm" (default; contains nt freq/prob in motif), or "pwm" (log-odds ratios; see pwm_motif_prob() for more detail).
 #'
 #' @return process_raw_input() calculates and saves the fold-change ranks, processed sequence data and sequence-specific motif probabilities, and returns a list containing all file paths; list(FC_rank_path, seqs_path, seqlist_path, motif_prob_path).
 #' @export
@@ -34,7 +36,8 @@
 process_raw_input <- function(exp, seq_data, motifs, out_path = "./",
                               exp_type = "count", save_processed_exp = F, process_all = T,
                               seq_gene_id = "gsym", seq_min_length = 20, seq_max_length = 10000,
-                              control_exp = NULL, approx_motif_prob = F, cores = parallel::detectCores()){
+                              control_exp = NULL, approx_motif_prob = F, cores = parallel::detectCores(),
+                              markov_order = 0, pwm_motif_type = "ppm"){
   # initial checks
   if(substring(out_path, nchar(out_path)) != "/"){out_path <- paste0(out_path, "/")}
   if(is.data.frame(exp) + is.matrix(exp) + is.character(exp) == 0) stop("expression data input should be either a dataframe, matrix, or character string specifying an .rds input file" , call. = F)
@@ -87,9 +90,9 @@ process_raw_input <- function(exp, seq_data, motifs, out_path = "./",
       # check that paths are given in correct order
       if (!is.data.frame(seqs)) stop("seq_data[1] input path should be a dataframe, please check that paths to sequence and sequence list objects haven't been swapped.", call. = F)
     }
-    motif_prob_path <- bayesReact::motif_prob(motifs, seqs, seqlist, paths = F,
-                                              cores = cores, out_path = out_path,
-                                              binom_approx = approx_motif_prob, include_counts = T) # update include_counts if changes are made to the approx. model in motif_prob()
+    motif_prob_path <- bayesReact::motif_prob(motifs, seqs, seqlist, paths = F, cores = cores, out_path = out_path,
+                                              binom_approx = approx_motif_prob, include_counts = T,
+                                              markov_order = markov_order, pwm_motif_type = pwm_motif_type) # update include_counts if changes are made to the approx. model in motif_prob()
 
     cat("Successfully processed sequence-specific motif probabilities. \n")
 

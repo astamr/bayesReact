@@ -17,7 +17,9 @@ process_raw_input(
   seq_max_length = 10000,
   control_exp = NULL,
   approx_motif_prob = F,
-  cores = parallel::detectCores()
+  cores = parallel::detectCores(),
+  markov_order = 0,
+  pwm_motif_type = "ppm"
 )
 }
 \arguments{
@@ -26,7 +28,7 @@ process_raw_input(
 \item{seq_data}{character string, dataframe, or vector; path to a bioMart output (decompressed .fasta file); a dataframe containing gene_name/gene_IDs, sequences, and sequence lengths;
 or a character vector containing the paths to 'seqs' and 'seqlist' objects (e.g., seq_data = c("./seqs.rds", "./seqlist.rds")).}
 
-\item{motifs}{vector with motifs, e.g., c("ACGTAGT", "GTACAAG"), or an integer specifying the k-mers to be used, e.g., 7 for all 7-mers.
+\item{motifs}{vector with motifs, e.g., c("ACGTAGT", "GTACAAG"); an integer specifying the k-mers to be used, e.g., 7 for all 7-mers; or a list of 'aligned motif sites'/PCM/PPM/PWM matrices (e.g., list(mot1 = matrix(nrow = 4, dimnames = list(c("A", "C", "G", "T"), NULL)))).
 A motif is specified as a regular expression on the alphabet {A,C,G,T}.}
 
 \item{out_path}{character string specifying directory to save .rds files in. Default is current working directory.}
@@ -47,9 +49,13 @@ The input can be "gsym" (gene symbol, default), "gid" (ensembl gene id), "tid" (
 
 \item{control_exp}{optional numerical vector or matrix used for fold-change score calculation and ranking. Used when expression values for a user-defined control setting(s) is available. It should match the row ordering of the 'exp' input (vector) as well as the column ordering (matrix). If NULL (default), the median gene expressions of 'exp' are used instead.}
 
-\item{approx_motif_prob}{logical, whether to use a binomial approximation to compute motif probabilities (default is FALSE).}
+\item{approx_motif_prob}{logical, whether to use a binomial approximation to compute motif probabilities (default is FALSE; this can be very slow especially for PCM/PPM/PWM motifs).}
 
 \item{cores}{integer, number of cores to use for parallel processing when computing motif probabilities (default is all available cores).}
+
+\item{markov_order}{integer specifying order of motif background model used to obtain sequence-specific motif probabilities (SSPs): 0 uses nucleotide frequencies (default), and 1 uses dinucleotide transition probabilities.}
+
+\item{pwm_motif_type}{character specifying the motif representation (only used if motifs are provided as a list). Should be either "motif_sites", "pcm" (nt counts), "ppm" (default; contains nt freq/prob in motif), or "pwm" (log-odds ratios; see pwm_motif_prob() for more detail).}
 }
 \value{
 process_raw_input() calculates and saves the fold-change ranks, processed sequence data and sequence-specific motif probabilities, and returns a list containing all file paths; list(FC_rank_path, seqs_path, seqlist_path, motif_prob_path).
