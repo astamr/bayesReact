@@ -26,6 +26,7 @@
 #' "dp" approximates the PWM score distribution using discretization and dynamic programming (faster);
 #' and "global" pools motif counts across all sequences into one per-window probability used for every sequence, correcting only for seq length not nt context (rapid).
 #' @param markov_order integer specifying order of the sequence-specific motif background model used by "exact" and "dp": 0 uses nucleotide frequencies (default) and 1 uses dinucleotides.
+#' @param dp_resolution integer specifying number of score bins used to discretize the PWM score range in DP approx. (high resolution leads to better approx. but slower run time).
 #' @param cores integer specifying number of cores used to process motifs (set to 1 for Window systems due to use of mclapply).
 #'
 #' @return list containing sequences X motifs matrices: motif_counts and motif_probs.
@@ -60,7 +61,7 @@
 #'
 pwm_motif_prob <- function(motifs, motif_type, seqs, seqlist, threshold_type = "relative", threshold = 0.8,
                            pwm_background = "seqs_nt_freq", pseudocount = 0.25, log_base = 2, motif_overlap = FALSE,
-                           prob_method = "global", markov_order = 0, cores = parallel::detectCores()) {
+                           prob_method = "global", markov_order = 0, dp_resolution = 10000, cores = parallel::detectCores()) {
 
   nts <- c("A", "C", "G", "T") # used to enforce row names and order
 
@@ -375,7 +376,7 @@ pwm_motif_prob <- function(motifs, motif_type, seqs, seqlist, threshold_type = "
         if(markov_order == 1){cond_prob_eval <- cond_prob[, , seqs_eval, drop = FALSE]} # P(m_i | m_{i-1})
 
         if(prob_method == "exact"){window_prob <- pwm_prob_in_seq_window_exact(pwm, cutoff, seqs_freq_nt_eval, cond_prob_eval)} # P(m)
-        if(prob_method == "dp"){window_prob <- pwm_prob_in_seq_window_DP(pwm, cutoff, seqs_freq_nt_eval, cond_prob_eval)} # bayesReact:::
+        if(prob_method == "dp"){window_prob <- pwm_prob_in_seq_window_DP(pwm, cutoff, seqs_freq_nt_eval, cond_prob_eval, dp_resolution)} # bayesReact:::
       }
       window_prob <- pmin(pmax(window_prob, 0), 1) # avoid floating point issues
 

@@ -17,6 +17,7 @@ pwm_motif_prob(
   motif_overlap = FALSE,
   prob_method = "global",
   markov_order = 0,
+  dp_resolution = 10000,
   cores = parallel::detectCores()
 )
 }
@@ -52,6 +53,8 @@ and "global" pools motif counts across all sequences into one per-window probabi
 
 \item{markov_order}{integer specifying order of the sequence-specific motif background model used by "exact" and "dp": 0 uses nucleotide frequencies (default) and 1 uses dinucleotides.}
 
+\item{dp_resolution}{integer specifying number of score bins used to discretize the PWM score range in DP approx. (high resolution leads to better approx. but slower run time).}
+
 \item{cores}{integer specifying number of cores used to process motifs (set to 1 for Window systems due to use of mclapply).}
 }
 \value{
@@ -62,7 +65,7 @@ Function for calculating PWM motif probabilities using a global or
 sequence-specific binomial approximation and counting observed PWM motif occurrences.
 
 Motifs should be supplied as a list of one of the following input types: Vectors with aligned binding-site sequences; or matrices with position counts (PCMs), position probabilities/frequences (PPMs), or
-unscaled log-odds position weights (PWMs). Input motif matrices should use row order A, C, G, and T.
+unscaled log-(odds+1) position weights (PWMs). Input motif matrices should use row order A, C, G, and T.
 }
 \examples{
 \dontrun{
@@ -79,7 +82,7 @@ pcm_matrix <- matrix(c(8, 1, 1, 0, 0, 8, 1, 1,
 pcm <- list(TF_1 = pcm_matrix)
 ppm <- lapply(pcm, function(x) sweep(x + 0.25, 2, colSums(x) + 1, "/"))
 pwm <- lapply(ppm, function(x) {
-  log2(sweep(x, 1, c(A = 0.25, C = 0.25, G = 0.25, T = 0.25), "/"))})
+  log2(sweep(x, 1, c(A = 0.25, C = 0.25, G = 0.25, T = 0.25), "/") +1)})
 
 pwm_motif_prob(motifs = pcm, motif_type = "pcm",
 seqs = seqs, seqlist = seqlist)
