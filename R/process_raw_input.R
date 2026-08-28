@@ -19,7 +19,6 @@
 #' @param seq_min_length integer, minimum sequence length to include in the seqs object and list. Default is 20.
 #' @param seq_max_length integer, maximum sequence length to include in the seqs object and list. Default is 10,000.
 #' @param control_exp optional numerical vector or matrix used for fold-change score calculation and ranking. Used when expression values for a user-defined control setting(s) is available. It should match the row ordering of the 'exp' input (vector) as well as the column ordering (matrix). If NULL (default), the median gene expressions of 'exp' are used instead.
-#' @param approx_motif_prob logical, whether to use a binomial approximation to compute motif probabilities (default is FALSE; this can be very slow especially for PCM/PPM/PWM motifs).
 #' @param cores integer, number of cores to use for parallel processing when computing motif probabilities (default is all available cores).
 #' @param markov_order integer specifying order of motif background model used to obtain sequence-specific motif probabilities (SSPs): 0 uses nucleotide frequencies (default), and 1 uses dinucleotide transition probabilities.
 #' @param pwm_motif_type character specifying the motif representation (only used if motifs are provided as a list). Should be either "motif_sites", "pcm" (nt counts), "ppm" (default; contains nt freq/prob in motif), or "pwm" (log-odds ratios; see pwm_motif_prob() for more detail).
@@ -36,7 +35,7 @@
 process_raw_input <- function(exp, seq_data, motifs, out_path = "./",
                               exp_type = "count", save_processed_exp = F, process_all = T,
                               seq_gene_id = "gsym", seq_min_length = 20, seq_max_length = 10000,
-                              control_exp = NULL, approx_motif_prob = F, cores = parallel::detectCores(),
+                              control_exp = NULL, cores = parallel::detectCores(),
                               markov_order = 0, pwm_motif_type = "ppm"){
   # initial checks
   if(substring(out_path, nchar(out_path)) != "/"){out_path <- paste0(out_path, "/")}
@@ -90,9 +89,18 @@ process_raw_input <- function(exp, seq_data, motifs, out_path = "./",
       # check that paths are given in correct order
       if (!is.data.frame(seqs)) stop("seq_data[1] input path should be a dataframe, please check that paths to sequence and sequence list objects haven't been swapped.", call. = F)
     }
-    motif_prob_path <- bayesReact::motif_prob(motifs, seqs, seqlist, paths = F, cores = cores, out_path = out_path,
-                                              binom_approx = approx_motif_prob, include_counts = T,
-                                              markov_order = markov_order, pwm_motif_type = pwm_motif_type) # update include_counts if changes are made to the approx. model in motif_prob()
+    # check how to run motif_probs (binom approx or exact)
+    motifs_int <- motifs
+    if(is.list(motifs_int) || is.numeric(motifs) && length(motifs) == 1 && motifs == floor(motifs)){ # Run binomial model for K-mers and PWMs
+      motif_prob_path <- bayesReact::motif_prob(motifs, seqs, seqlist, paths = F, cores = cores, out_path = out_path,
+                                                binom_approx = T, include_counts = T,
+                                                markov_order = markov_order, pwm_motif_type = pwm_motif_type)
+    } else{ # Run Markov model for REs
+      motif_prob_path <- bayesReact::motif_prob(motifs, seqs, seqlist, paths = F, cores = cores, out_path = out_path,
+                                                binom_approx = F, include_counts = T,
+                                                markov_order = markov_order, pwm_motif_type = pwm_motif_type)
+      }
+
 
     cat("Successfully processed sequence-specific motif probabilities. \n")
 

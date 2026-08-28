@@ -15,9 +15,9 @@ pwm_motif_prob(
   pseudocount = 0.25,
   log_base = 2,
   motif_overlap = FALSE,
-  prob_method = "global",
-  markov_order = 0,
-  dp_resolution = 10000,
+  prob_method = "dp",
+  markov_order = 1,
+  dp_resolution = 1e+05,
   cores = parallel::detectCores()
 )
 }

@@ -42,8 +42,8 @@ motif_prob <- function(motifs, seqs, seqlist, paths = T, binom_approx = F, cores
   motifs_int <- motifs
 
   # check if motif is list of PWMs
-  if(is.list(motifs_int)){
-    prob_method <- ifelse(binom_approx, "global", "exact") # always binom model, here whether P(m) is exact or approx.
+  if(is.list(motifs_int)){ # "global" currently unreachable!! (dp is better approx.)
+    prob_method <- ifelse(binom_approx, "dp", "exact") # always binom model, here whether P(m) is exact or approx.
 
     pwm_out <- bayesReact::pwm_motif_prob(motifs = motifs, motif_type = pwm_motif_type, seqs = seqs,
                                seqlist = seqlist, cores = cores, markov_order = markov_order,

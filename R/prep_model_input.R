@@ -40,7 +40,7 @@ prep_model_input <- function(in_seq_motif_data, threshold_motif_prob = 1e-10, th
     l_vector <- (-log1p(-ifelse(in_seq_motif_data$motif_probs < threshold_motif_prob, threshold_motif_prob,
                          ifelse(in_seq_motif_data$motif_probs > 1 - 1e-10, 1 - 1e-10, in_seq_motif_data$motif_probs))))
   } else{
-    # add fixed upper cap to avoid returning Inf (when motif_prob = 1)
+    # add fixed upper cap to avoid returning Inf (when motif_prob = 1; especially problem for RBPs)
     l_vector <- (-log1p(-ifelse(in_seq_motif_data$motif_probs > 1 - 1e-10, 1 - 1e-10, in_seq_motif_data$motif_probs))) # poisson lambda (depends on sequence specific probability of observing motif at least once)
   }
 

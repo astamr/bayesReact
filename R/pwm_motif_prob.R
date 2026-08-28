@@ -61,7 +61,7 @@
 #'
 pwm_motif_prob <- function(motifs, motif_type, seqs, seqlist, threshold_type = "relative", threshold = 0.8,
                            pwm_background = "seqs_nt_freq", pseudocount = 0.25, log_base = 2, motif_overlap = FALSE,
-                           prob_method = "global", markov_order = 0, dp_resolution = 10000, cores = parallel::detectCores()) {
+                           prob_method = "dp", markov_order = 1, dp_resolution = 100000, cores = parallel::detectCores()) {
 
   nts <- c("A", "C", "G", "T") # used to enforce row names and order
 

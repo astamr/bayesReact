@@ -16,7 +16,6 @@ process_raw_input(
   seq_min_length = 20,
   seq_max_length = 10000,
   control_exp = NULL,
-  approx_motif_prob = F,
   cores = parallel::detectCores(),
   markov_order = 0,
   pwm_motif_type = "ppm"
@@ -48,8 +47,6 @@ The input can be "gsym" (gene symbol, default), "gid" (ensembl gene id), "tid" (
 \item{seq_max_length}{integer, maximum sequence length to include in the seqs object and list. Default is 10,000.}
 
 \item{control_exp}{optional numerical vector or matrix used for fold-change score calculation and ranking. Used when expression values for a user-defined control setting(s) is available. It should match the row ordering of the 'exp' input (vector) as well as the column ordering (matrix). If NULL (default), the median gene expressions of 'exp' are used instead.}
-
-\item{approx_motif_prob}{logical, whether to use a binomial approximation to compute motif probabilities (default is FALSE; this can be very slow especially for PCM/PPM/PWM motifs).}
 
 \item{cores}{integer, number of cores to use for parallel processing when computing motif probabilities (default is all available cores).}
 
